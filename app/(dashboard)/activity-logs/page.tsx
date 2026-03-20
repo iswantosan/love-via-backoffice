@@ -21,15 +21,18 @@ export default function ActivityLogsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">History Log (OTP, Email, Notif, Login)</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Riwayat aktivitas</h1>
+      <p className="text-gray-500 text-sm mb-6">Login, OTP, email, notifikasi, dan tindakan admin tercatat di sini.</p>
       <div className="mb-4 flex gap-2">
         <select value={type} onChange={(e) => { setType(e.target.value); setPage(1) }} className="rounded border px-3 py-2">
           <option value="">Semua tipe</option>
           <option value="otp">OTP</option>
           <option value="email">Email</option>
           <option value="notification">Notification</option>
-          <option value="admin_login">Admin Login</option>
-          <option value="password_reset">Password Reset</option>
+          <option value="login">Login (user)</option>
+          <option value="admin_login">Admin login</option>
+          <option value="admin_member_update">Admin update member</option>
+          <option value="password_reset">Password reset</option>
         </select>
       </div>
       {loading ? <p className="text-gray-500">Loading...</p> : data && (
@@ -59,10 +62,11 @@ export default function ActivityLogsPage() {
             </table>
           </div>
           {data.total > 30 && (
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex gap-2 items-center">
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="rounded border px-3 py-1 disabled:opacity-50">Sebelumnya</button>
-              <span className="py-1">Halaman {page}</span>
+              <span className="text-sm">Halaman {page} / {Math.max(1, Math.ceil(data.total / 30))}</span>
               <button onClick={() => setPage((p) => p + 1)} disabled={page >= Math.ceil(data.total / 30)} className="rounded border px-3 py-1 disabled:opacity-50">Selanjutnya</button>
+              <span className="text-sm text-gray-500 ml-2">Total {data.total}</span>
             </div>
           )}
         </>

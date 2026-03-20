@@ -18,18 +18,22 @@ import {
   Key,
   LogOut,
   ClipboardList,
+  Heart,
+  Package,
 } from 'lucide-react'
 
 const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/members', label: 'Members', icon: Users },
-  { href: '/masters/criteria', label: 'Data Master - Kriteria', icon: BookOpen },
-  { href: '/masters/locations', label: 'Data Master - Tempat Meet', icon: MapPin },
-  { href: '/activity-logs', label: 'History Log', icon: History },
+  { href: '/members', label: 'Member', icon: Users },
+  { href: '/masters/criteria', label: 'Master Kriteria', icon: BookOpen },
+  { href: '/masters/locations', label: 'Master Tempat Meet', icon: MapPin },
+  { href: '/packages', label: 'Paket', icon: Package },
+  { href: '/matches', label: 'Match', icon: Heart },
+  { href: '/activity-logs', label: 'Riwayat aktivitas', icon: History },
   { href: '/transactions', label: 'Transaksi', icon: CreditCard },
-  { href: '/reservations', label: 'Reservasi (Mail Merge)', icon: ClipboardList },
+  { href: '/reservations', label: 'Reservasi', icon: ClipboardList },
   { href: '/testimonials', label: 'Testimoni', icon: MessageSquare },
-  { href: '/reports', label: 'Reports', icon: Flag },
+  { href: '/reports', label: 'Laporan', icon: Flag },
   { href: '/admins', label: 'Admin', icon: Shield },
   { href: '/change-password', label: 'Ganti Password', icon: Key },
 ]

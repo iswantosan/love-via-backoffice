@@ -25,9 +25,17 @@ export default function LocationsPage() {
     if (res.success) { setModal(false); setForm({ name: '', address: '', city: '', type: 'restaurant', description: '' }); load() }
   }
 
+  const remove = async (id: string, name: string) => {
+    if (!confirm(`Hapus tempat "${name}" dari master data?`)) return
+    const res = await api.deleteLocation(id)
+    if (res.success) load()
+    else alert(res.error || 'Gagal hapus')
+  }
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Data Master - Tempat Meet (Restaurant / Cafe)</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">Master Tempat Meet</h1>
+      <p className="text-gray-500 text-sm mb-6">Restaurant, café, dan venue kencan lainnya.</p>
       <button onClick={() => setModal(true)} className="mb-4 bg-lovevia-blue text-white rounded-lg px-4 py-2">+ Tambah Tempat</button>
       {loading ? <p className="text-gray-500">Loading...</p> : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -38,6 +46,7 @@ export default function LocationsPage() {
                 <th className="px-4 py-3 font-medium">Alamat</th>
                 <th className="px-4 py-3 font-medium">Kota</th>
                 <th className="px-4 py-3 font-medium">Tipe</th>
+                <th className="px-4 py-3 font-medium w-24">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -47,6 +56,11 @@ export default function LocationsPage() {
                   <td className="px-4 py-3">{loc.address}</td>
                   <td className="px-4 py-3">{loc.city}</td>
                   <td className="px-4 py-3">{loc.type}</td>
+                  <td className="px-4 py-3">
+                    <button type="button" className="text-red-600 text-sm" onClick={() => remove(loc.id, loc.name)}>
+                      Hapus
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

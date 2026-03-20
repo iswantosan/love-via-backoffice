@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 
-type Member = { id: string; email?: string; phoneNumber?: string; profile?: { name: string } }
+type Member = {
+  id: string
+  email?: string
+  phoneNumber?: string
+  isVerified?: boolean
+  isSuspended?: boolean
+  faceVerified?: boolean
+  profile?: { name: string }
+}
 
 export default function MembersPage() {
   const [list, setList] = useState<Member[]>([])
@@ -29,7 +37,7 @@ export default function MembersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Members</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Member</h1>
       <form onSubmit={onSearch} className="flex gap-2 mb-4">
         <input
           type="search"
@@ -60,8 +68,14 @@ export default function MembersPage() {
                     <td className="px-4 py-3">{u.profile?.name || '-'}</td>
                     <td className="px-4 py-3">{u.email || '-'}</td>
                     <td className="px-4 py-3">{u.phoneNumber || '-'}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {u.isSuspended && <span className="text-red-600 font-medium">Suspended</span>}
+                      {!u.isSuspended && u.isVerified && <span className="text-green-600">Verified</span>}
+                      {!u.isSuspended && !u.isVerified && <span className="text-amber-600">Belum verified</span>}
+                      {u.faceVerified ? ' · Face✓' : ''}
+                    </td>
                     <td className="px-4 py-3">
-                      <Link href={`/members/${u.id}`} className="text-lovevia-blue font-medium">Detail / Reset Password</Link>
+                      <Link href={`/members/${u.id}`} className="text-lovevia-blue font-medium">Detail</Link>
                     </td>
                   </tr>
                 ))}

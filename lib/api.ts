@@ -20,17 +20,22 @@ async function request<T>(
   options: RequestInit & { token?: string | null } = {}
 ): Promise<{ success: boolean; data?: T; error?: string }> {
   const { token = getToken(), ...opts } = options
-  const res = await fetch(`${API_URL}/api/admin${path}`, {
-    ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...opts.headers,
-    },
-  })
-  const json = await res.json().catch(() => ({}))
-  if (!res.ok) return { success: false, error: json.error || res.statusText }
-  return json
+  try {
+    const res = await fetch(`${API_URL}/api/admin${path}`, {
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...opts.headers,
+      },
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) return { success: false, error: json.error || res.statusText }
+    return json
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Jaringan / server tidak terjangkau'
+    return { success: false, error: `${msg}. Periksa NEXT_PUBLIC_API_URL dan pastikan backend jalan.` }
+  }
 }
 
 export const api = {
@@ -53,7 +58,32 @@ export const api = {
       body: JSON.stringify({ userId, newPassword }),
     }),
 
-  getDashboard: () => request<Record<string, number>>('/dashboard'),
+  getDashboard: (params?: { from?: string; to?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.from) q.set('from', params.from)
+    if (params?.to) q.set('to', params.to)
+    const s = q.toString()
+    return request<{
+      range: { from: string; to: string; capped: boolean }
+      usersCount: number
+      meetupsCount: number
+      paymentsCount: number
+      paymentsTotal: number
+      feedbacksCount: number
+      reportsTotal: number
+      reportsPending: number
+      paymentStatusBreakdown: Array<{ status: string; count: number }>
+      series: Array<{
+        date: string
+        transaksiLunas: number
+        pendapatan: number
+        testimoni: number
+        laporan: number
+        reservasi: number
+        memberBaru: number
+      }>
+    }>(`/dashboard${s ? `?${s}` : ''}`)
+  },
   getMembers: (params?: { page?: number; limit?: number; search?: string }) => {
     const q = new URLSearchParams()
     if (params?.page) q.set('page', String(params.page))
@@ -62,6 +92,31 @@ export const api = {
     return request<{ list: unknown[]; total: number; page: number; limit: number }>(`/members?${q}`)
   },
   getMember: (id: string) => request<unknown>(`/members/${id}`),
+  updateMember: (id: string, body: Record<string, unknown>) =>
+    request(`/members/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  verifyMeetup: (meetupId: string, verified: boolean, adminNotes?: string) =>
+    request('/verify-meetup', {
+      method: 'POST',
+      body: JSON.stringify({ meetupId, verified, adminNotes: adminNotes || undefined }),
+    }),
+
+  getMatches: (params?: { page?: number; limit?: number; activeOnly?: boolean }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.activeOnly === false) q.set('activeOnly', '0')
+    return request<{ list: unknown[]; total: number; page?: number; limit?: number }>(`/matches?${q}`)
+  },
+  updateMatch: (id: string, body: Record<string, unknown>) =>
+    request(`/matches/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  getPackages: () => request<unknown[]>('/packages'),
+  createPackage: (body: Record<string, unknown>) =>
+    request('/packages', { method: 'POST', body: JSON.stringify(body) }),
+  updatePackage: (id: string, body: Record<string, unknown>) =>
+    request(`/packages/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deletePackage: (id: string) => request(`/packages/${id}`, { method: 'DELETE' }),
 
   getCriteria: () => request<Array<{ id: string; name: string; displayName: string; subcriteria: unknown[] }>>('/criteria'),
   createCriteria: (body: { name?: string; displayName: string; description?: string; order?: number }) =>
@@ -89,14 +144,28 @@ export const api = {
     if (params?.type) q.set('type', params.type)
     return request<{ list: unknown[]; total: number }>(`/activity-logs?${q}`)
   },
-  getTransactions: (params?: { page?: number; limit?: number }) => {
+  getTransactions: (params?: { page?: number; limit?: number; status?: string }) => {
     const q = new URLSearchParams()
     if (params?.page) q.set('page', String(params.page))
     if (params?.limit) q.set('limit', String(params.limit))
-    return request<{ list: unknown[]; total: number }>(`/transactions?${q}`)
+    if (params?.status) q.set('status', params.status)
+    return request<{ list: unknown[]; total: number; page?: number; limit?: number }>(`/transactions?${q}`)
   },
-  getFeedbacks: () => request<unknown[]>('/feedbacks'),
-  getReports: () => request<unknown[]>('/reports'),
+  getFeedbacks: (params?: { page?: number; limit?: number; minRating?: number }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.minRating != null) q.set('minRating', String(params.minRating))
+    return request<{ list: unknown[]; total: number; page?: number; limit?: number }>(`/feedbacks?${q}`)
+  },
+  getReports: (params?: { page?: number; limit?: number; status?: string; type?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.status) q.set('status', params.status)
+    if (params?.type) q.set('type', params.type)
+    return request<{ list: unknown[]; total: number; page?: number; limit?: number }>(`/reports?${q}`)
+  },
   updateReportStatus: (id: string, body: { status?: string; adminNotes?: string }) =>
     request(`/reports/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
 
@@ -106,5 +175,12 @@ export const api = {
 
   getReservationLetter: (meetupId: string) =>
     request<{ letter: string; locationName: string; waktu: string; userName: string }>(`/meetups/${meetupId}/reservation-letter`),
-  getMeetups: () => request<unknown[]>('/meetups'),
+  getMeetups: (params?: { page?: number; limit?: number; status?: string; paymentStatus?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.status) q.set('status', params.status)
+    if (params?.paymentStatus) q.set('paymentStatus', params.paymentStatus)
+    return request<{ list: unknown[]; total: number; page?: number; limit?: number }>(`/meetups?${q}`)
+  },
 }
