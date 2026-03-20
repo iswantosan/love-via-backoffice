@@ -9,6 +9,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Next / Docker standalone mengharapkan folder public (boleh kosong)
+RUN mkdir -p public
+
 # Wajib di-build: URL publik yang dipakai browser ke API (host:port atau domain)
 ARG NEXT_PUBLIC_API_URL=http://127.0.0.1:8080
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
